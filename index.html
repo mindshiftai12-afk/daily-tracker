@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>King 18 - Chase Like Kohli</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d0b1e; }
+  input, textarea, button, select { font-family: 'Nunito', sans-serif; }
+  textarea { outline: none; }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 99px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const TODAY_IDX = (new Date().getDay() + 6) % 7;
+const VOCAB = [
+  {w:"Tenacious",p:"adj.",d:"Not giving up easily; persistent and determined.",e:"She was tenacious studying for the Civics Bee every single day."},
+  {w:"Eloquent",p:"adj.",d:"Fluent and persuasive in speaking or writing.",e:"The student gave an eloquent speech at the assembly."},
+  {w:"Diligent",p:"adj.",d:"Showing care and effort in your work.",e:"A diligent student always completes Kumon on time."},
+  {w:"Resilient",p:"adj.",d:"Able to recover quickly from difficulties.",e:"He was resilient after a tough test and studied harder."},
+  {w:"Inquisitive",p:"adj.",d:"Having a strong desire to learn or know things.",e:"His inquisitive nature led him to research beyond the textbook."},
+  {w:"Persevere",p:"verb",d:"Continue despite difficulty or delay.",e:"He chose to persevere through the tough math problems."},
+  {w:"Exemplary",p:"adj.",d:"Serving as a desirable model; outstanding.",e:"Her exemplary behavior earned the top student award."},
+  {w:"Ambiguous",p:"adj.",d:"Open to more than one interpretation; unclear.",e:"The quiz question was ambiguous so the teacher explained it."},
+  {w:"Hypothesis",p:"noun",d:"A proposed explanation made on limited evidence.",e:"His hypothesis was that plants grow faster with more sunlight."},
+  {w:"Benevolent",p:"adj.",d:"Well-meaning and kindly; generous.",e:"The benevolent principal organised a donation drive."},
+  {w:"Advocate",p:"verb",d:"To publicly support a cause or idea.",e:"She advocates for kindness in her school every day."},
+  {w:"Meticulous",p:"adj.",d:"Showing great attention to detail.",e:"He was meticulous in organising his notes before the test."},
+  {w:"Collaborate",p:"verb",d:"Work jointly with others toward a common goal.",e:"The class collaborated on a science project about ecosystems."},
+  {w:"Scrutinize",p:"verb",d:"Examine or inspect closely and thoroughly.",e:"The teacher asked students to scrutinize the map carefully."},
+];
+const W = VOCAB[new Date().getDate() % VOCAB.length];
+const pad = n => String(n).padStart(2,"0");
+
+const C = {
+  app: { minHeight:"100vh", background:"linear-gradient(160deg,#0d0b1e 0%,#17104a 50%,#0d0b1e 100%)", color:"#f0eaff", fontFamily:"'Nunito',sans-serif", padding:"0 0 100px" },
+  wrap: { maxWidth:940, margin:"0 auto", padding:"0 16px" },
+  card: { background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.1)", borderRadius:16, padding:16, marginBottom:12 },
+  ct: (color) => ({ fontFamily:"'Baloo 2',sans-serif", fontSize:16, fontWeight:800, marginBottom:10, color }),
+  ci: (done) => ({ display:"flex", alignItems:"center", gap:8, padding:"8px 10px", borderRadius:10, background:done?"rgba(107,203,119,.12)":"rgba(255,255,255,.04)", border:`1px solid ${done?"rgba(107,203,119,.3)":"rgba(255,255,255,.07)"}`, cursor:"pointer", marginBottom:5, userSelect:"none" }),
+  cb: (done) => ({ width:20, height:20, borderRadius:6, border:done?"none":"2px solid rgba(255,255,255,.25)", background:done?"#6bcb77":"transparent", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"#0d0b1e", fontWeight:900, flexShrink:0 }),
+  inp: { flex:1, background:"rgba(0,0,0,.25)", border:"1px solid rgba(255,255,255,.12)", borderRadius:8, color:"#f0eaff", fontFamily:"'Nunito',sans-serif", fontSize:14, padding:"7px 10px", outline:"none" },
+  ta: { width:"100%", background:"rgba(0,0,0,.22)", border:"1px solid rgba(255,255,255,.12)", borderRadius:10, color:"#f0eaff", fontFamily:"'Nunito',sans-serif", fontSize:14, padding:"8px 12px", minHeight:90, resize:"vertical", outline:"none" },
+  btn: (col) => {
+    const bg={green:"linear-gradient(135deg,#6bcb77,#45b36a)",blue:"linear-gradient(135deg,#4d96ff,#2a7aff)",purple:"linear-gradient(135deg,#c77dff,#a24dff)",yellow:"linear-gradient(135deg,#ffd93d,#ffa500)",red:"linear-gradient(135deg,#ff6b6b,#ff4444)"};
+    return { background:bg[col]||bg.green, border:"none", borderRadius:8, color:col==="yellow"?"#1a1200":"#fff", fontFamily:"'Nunito',sans-serif", fontWeight:700, fontSize:14, padding:"7px 14px", cursor:"pointer", whiteSpace:"nowrap" };
+  },
+  si: (done) => ({ display:"flex", alignItems:"center", justifyContent:"space-between", gap:6, padding:"7px 10px", borderRadius:10, background:done?"rgba(107,203,119,.1)":"rgba(255,255,255,.04)", border:`1px solid ${done?"rgba(107,203,119,.25)":"rgba(255,255,255,.07)"}`, marginBottom:5 }),
+  sib: (done) => ({ width:19, height:19, borderRadius:5, border:done?"none":"2px solid rgba(255,255,255,.22)", background:done?"#6bcb77":"transparent", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, color:"#0d0b1e", fontWeight:900, flexShrink:0 }),
+};
+
+function Prog({ done, total, color }) {
+  const pct = total > 0 ? Math.round(done/total*100) : 0;
+  return (
+    <div style={{marginTop:8}}>
+      <div style={{background:"rgba(255,255,255,.08)",borderRadius:99,height:8,overflow:"hidden"}}>
+        <div style={{width:`${pct}%`,height:"100%",borderRadius:99,background:color,transition:"width .4s"}} />
+      </div>
+      <div style={{fontSize:12,color:"#a89bc2",textAlign:"right",marginTop:3}}>{done} / {total} done</div>
+    </div>
+  );
+}
+
+function AddInp({ ph, onAdd, col="green", wide }) {
+  const [v,setV] = useState("");
+  const go = () => { if(v.trim()){ onAdd(v.trim()); setV(""); }};
+  return (
+    <div style={{display:"flex",gap:6,marginTop:8}}>
+      <input style={{...C.inp, ...(wide?{}:{})}} value={v} onChange={e=>setV(e.target.value)} placeholder={ph} onKeyDown={e=>e.key==="Enter"&&go()} />
+      <button style={C.btn(col)} onClick={go}>+ Add</button>
+    </div>
+  );
+}
+
+function Notes({ id }) {
+  const [v,setV] = useState(()=>localStorage.getItem("n_"+id)||"");
+  const [ok,setOk] = useState(false);
+  const save = () => { localStorage.setItem("n_"+id,v); setOk(true); setTimeout(()=>setOk(false),1500); };
+  return (
+    <div>
+      <textarea style={C.ta} value={v} onChange={e=>setV(e.target.value)} placeholder="Add notes here..." />
+      <button style={{...C.btn("green"),width:"100%",marginTop:6,padding:10}} onClick={save}>{ok?"✅ Saved!":"💾 Save Notes"}</button>
+    </div>
+  );
+}
+
+function SItem({ label, done, onTick, onDel }) {
+  return (
+    <div style={C.si(done)}>
+      <div style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",flex:1}} onClick={onTick}>
+        <div style={C.sib(done)}>{done?"✓":""}</div>
+        <span style={{fontSize:14,fontWeight:600,textDecoration:done?"line-through":"none",color:done?"#a89bc2":"#f0eaff"}}>{label}</span>
+      </div>
+      <button onClick={onDel} style={{background:"none",border:"none",color:"rgba(255,107,107,.5)",cursor:"pointer",fontSize:14,padding:"2px 6px"}}>✕</button>
+    </div>
+  );
+}
+
+function SList({ title, color, tag }) {
+  const [items,setItems] = useState([]);
+  return (
+    <div style={C.card}>
+      <div style={C.ct(color)}>{title} <span style={{background:`${color}22`,color,borderRadius:4,fontSize:11,fontWeight:700,padding:"2px 7px"}}>{tag}</span></div>
+      {items.map((x,i)=><SItem key={i} label={x.l} done={x.done} onTick={()=>setItems(s=>s.map((a,j)=>j===i?{...a,done:!a.done}:a))} onDel={()=>setItems(s=>s.filter((_,j)=>j!==i))} />)}
+      <AddInp ph={`Add ${tag.toLowerCase()}...`} onAdd={l=>setItems(s=>[...s,{l,done:false}])} col={tag==="HW"?"purple":tag==="DUE"?"red":tag==="TEST"?"purple":"yellow"} />
+    </div>
+  );
+}
+
+function TabChores() {
+  const [ch,setCh] = useState([{l:"🛏️ Make Bed",d:false},{l:"👕 Manage Almirah",d:false},{l:"📚 Wind Up Table",d:false},{l:"🧹 Keep Room Tidy",d:false},{l:"🍽️ Put Away Dishes",d:false}]);
+  const tog = i => setCh(c=>c.map((x,j)=>j===i?{...x,d:!x.d}:x));
+  const done = ch.filter(x=>x.d).length;
+  return (
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+      <div style={C.card}>
+        <div style={C.ct("#6bcb77")}>📋 Chore Checklist</div>
+        {ch.map((x,i)=>(
+          <div key={i} style={C.ci(x.d)} onClick={()=>tog(i)}>
+            <div style={C.cb(x.d)}>{x.d?"✓":""}</div>
+            <span style={{fontSize:14,fontWeight:600,textDecoration:x.d?"line-through":"none",color:x.d?"#a89bc2":"#f0eaff"}}>{x.l}</span>
+          </div>
+        ))}
+        <Prog done={done} total={ch.length} color="linear-gradient(90deg,#6bcb77,#45b36a)" />
+        <AddInp ph="Add a new chore..." onAdd={l=>setCh(c=>[...c,{l,d:false}])} col="green" />
+      </div>
+      <div style={C.card}>
+        <div style={C.ct("#6bcb77")}>📝 Parent Notes</div>
+        <Notes id="chores" />
+      </div>
+    </div>
+  );
+}
+
+function TabKumon() {
+  const [kd,setKd] = useState(()=>JSON.parse(localStorage.getItem("kuDone")||"[false,false,false,false,false,false,false]"));
+  const tog = i => { const n=kd.map((v,j)=>j===i?!v:v); setKd(n); localStorage.setItem("kuDone",JSON.stringify(n)); };
+  const cnt = kd.filter(Boolean).length;
+  let str=0; for(let i=TODAY_IDX;i>=0;i--){ if(kd[i])str++; else break; }
+  return (
+    <div>
+      <div style={C.card}>
+        <div style={C.ct("#4d96ff")}>📅 Weekly Kumon — Tap Your Day!</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:6}}>
+          {DAYS.map((d,i)=>(
+            <div key={i} onClick={()=>tog(i)} style={{background:kd[i]?"rgba(77,150,255,.18)":"rgba(255,255,255,.04)",border:`1px solid ${i===TODAY_IDX?"#ffd93d":kd[i]?"rgba(77,150,255,.4)":"rgba(255,255,255,.08)"}`,borderRadius:12,padding:"8px 4px",textAlign:"center",cursor:"pointer",boxShadow:i===TODAY_IDX?"0 0 12px rgba(255,217,61,.25)":"none"}}>
+              <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",color:"#a89bc2",marginBottom:4}}>{d}</div>
+              <div style={{fontSize:22}}>{kd[i]?"✅":"⬜"}</div>
+            </div>
+          ))}
+        </div>
+        <Prog done={cnt} total={7} color="linear-gradient(90deg,#4d96ff,#2a7aff)" />
+        <p style={{fontSize:12,color:"#a89bc2",marginTop:6}}>Tap a day to mark Kumon done! Today is highlighted in gold.</p>
+      </div>
+      <div style={C.card}>
+        <div style={C.ct("#4d96ff")}>🔥 Streak &amp; Badges</div>
+        <div style={{fontSize:14,color:"#a89bc2",marginBottom:8}}>Current Streak: <span style={{color:"#ffd93d",fontWeight:800,fontSize:20}}>{str}</span> days 🔥</div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+          {[["🌱 Starter","3 days"],["⚡ Charged","7 days"],["🔥 On Fire","14 days"],["💎 Legend","30 days"]].map(([n,d])=>(
+            <span key={n} style={{background:"rgba(255,217,61,.14)",border:"1px solid rgba(255,217,61,.35)",color:"#ffd93d",borderRadius:99,padding:"3px 10px",fontSize:12,fontWeight:700}}>{n} ({d})</span>
+          ))}
+        </div>
+      </div>
+      <div style={C.card}><div style={C.ct("#4d96ff")}>📝 Kumon Notes</div><Notes id="kumon" /></div>
+    </div>
+  );
+}
+
+function TabSchool() {
+  const [tests,setTests] = useState([{l:"Civics Bee — April 28",d:false}]);
+  return (
+    <div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+        <div><SList title="📘 Homework" color="#c77dff" tag="HW" /><SList title="⏳ Pending Assignments" color="#ff6b6b" tag="DUE" /></div>
+        <div>
+          <div style={C.card}>
+            <div style={C.ct("#c77dff")}>📝 Tests <span style={{background:"rgba(199,125,255,.2)",color:"#c77dff",borderRadius:4,fontSize:11,fontWeight:700,padding:"2px 7px"}}>TEST</span></div>
+            {tests.map((x,i)=><SItem key={i} label={x.l} done={x.d} onTick={()=>setTests(s=>s.map((a,j)=>j===i?{...a,d:!a.d}:a))} onDel={()=>setTests(s=>s.filter((_,j)=>j!==i))} />)}
+            <AddInp ph="Add test..." onAdd={l=>setTests(s=>[...s,{l,d:false}])} col="purple" />
+          </div>
+          <SList title="🎯 Quizzes" color="#ffd93d" tag="QUIZ" />
+        </div>
+      </div>
+      <div style={C.card}><div style={C.ct("#c77dff")}>📝 School Notes</div><Notes id="school" /></div>
+    </div>
+  );
+}
+
+function TabRewards() {
+  const [pts,setPts] = useState(()=>parseInt(localStorage.getItem("pts")||"0"));
+  const [rws,setRws] = useState([{n:"🎮 Extra Screen Time (30 min)",p:10},{n:"🍕 Choose Dinner",p:20},{n:"🎯 Movie Night Pick",p:30},{n:"🏖️ Weekend Outing",p:50}]);
+  const [rn,setRn]=useState(""); const [rp,setRp]=useState(""); const [cp,setCp]=useState("");
+  const add = n => { const np=pts+n; setPts(np); localStorage.setItem("pts",np); };
+  return (
+    <div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+        <div>
+          <div style={C.card}>
+            <div style={C.ct("#ffd93d")}>⭐ Total Stars</div>
+            <div style={{fontFamily:"'Baloo 2',sans-serif",fontSize:52,fontWeight:800,color:"#ffd93d",textAlign:"center",lineHeight:1.2}}>{pts} ⭐</div>
+            <p style={{textAlign:"center",color:"#a89bc2",fontSize:13,marginTop:6}}>Complete tasks to earn stars!</p>
+          </div>
+          <div style={C.card}>
+            <div style={C.ct("#ffd93d")}>🎁 Reward Goals</div>
+            {rws.map((r,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 10px",borderRadius:10,background:"rgba(255,217,61,.06)",border:"1px solid rgba(255,217,61,.14)",marginBottom:6}}>
+                <span style={{fontWeight:700,fontSize:14}}>{r.n}</span>
+                <span style={{fontFamily:"'Baloo 2',sans-serif",fontWeight:800,color:"#ffd93d",fontSize:16}}>{r.p} ⭐</span>
+              </div>
+            ))}
+            <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}}>
+              <input style={{...C.inp}} value={rn} onChange={e=>setRn(e.target.value)} placeholder="Reward name..." />
+              <input style={{...C.inp,maxWidth:70}} type="number" value={rp} onChange={e=>setRp(e.target.value)} placeholder="⭐" />
+              <button style={C.btn("yellow")} onClick={()=>{ if(rn&&rp){ setRws(r=>[...r,{n:rn,p:parseInt(rp)}]); setRn(""); setRp(""); }}}>+ Add</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style={C.card}>
+            <div style={C.ct("#ffd93d")}>➕ Earn Stars</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+              {[["🧹 +1 Chore","green",1],["📖 +2 Kumon","blue",2],["📚 +3 Homework","purple",3],["📝 +5 Test Done!","yellow",5]].map(([l,c,n])=>(
+                <button key={l} style={{...C.btn(c),padding:10,fontSize:13}} onClick={()=>add(n)}>{l}</button>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:6,marginTop:8}}>
+              <input style={{...C.inp,maxWidth:130}} type="number" min="1" value={cp} onChange={e=>setCp(e.target.value)} placeholder="Custom stars..." />
+              <button style={C.btn("yellow")} onClick={()=>{ if(parseInt(cp)>0){ add(parseInt(cp)); setCp(""); }}}>+ Add</button>
+              <button style={{...C.btn("red"),marginLeft:"auto"}} onClick={()=>{ if(window.confirm("Reset all stars to 0?")){ setPts(0); localStorage.setItem("pts",0); }}}>🔄 Reset</button>
+            </div>
+          </div>
+          <div style={C.card}><div style={C.ct("#ffd93d")}>📝 Rewards Notes</div><Notes id="rewards" /></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TabWeekly() {
+  const [msg,setMsg] = useState("");
+  const [sts,setSts] = useState("");
+  const kd = JSON.parse(localStorage.getItem("kuDone")||"[false,false,false,false,false,false,false]");
+  const kc = kd.filter(Boolean).length;
+  let str=0; for(let i=TODAY_IDX;i>=0;i--){ if(kd[i])str++; else break; }
+  const pts = parseInt(localStorage.getItem("pts")||"0");
+
+  const send = async () => {
+    setSts("🤖 Preparing your report...");
+    const today = new Date().toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+    const data = `King 18 Daily Report - ${today}\nKumon done this week: ${kc}/7\nKumon streak: ${str} days\nTotal stars: ${pts}\nWeekly notes: ${localStorage.getItem("n_weekly")||"None"}\nMessage from son: ${msg||"(none)"}`;
+    try {
+      const r = await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:800,
+          system:"Write a warm friendly plain-text daily report email to a parent from their Grade 7 son's app King 18 - Chase Like Kohli. Celebrate wins. Note pending items. End with a Kohli-style motivational quote. Sign off as King 18 Daily Report.",
+          messages:[{role:"user",content:"Write the parent email:\n\n"+data}]})});
+      const j = await r.json();
+      const body = (j.content&&j.content[0]&&j.content[0].text) ? j.content[0].text : data;
+      const link = "mailto:mindshiftai12@gmail.com?subject="+encodeURIComponent("King 18 Daily Report - "+today)+"&body="+encodeURIComponent(body);
+      setSts('<a href="'+link+'" style="color:#ffd93d;font-weight:800;text-decoration:underline">✅ Click here to open & send the email!</a>');
+      setMsg("");
+    } catch(e) {
+      const link = "mailto:mindshiftai12@gmail.com?subject="+encodeURIComponent("King 18 Daily Report - "+today)+"&body="+encodeURIComponent(data);
+      setSts('<a href="'+link+'" style="color:#ffd93d;font-weight:800;text-decoration:underline">📧 Click here to send report via email</a>');
+    }
+  };
+
+  return (
+    <div>
+      <div style={C.card}>
+        <div style={C.ct("#ff6b6b")}>📊 This Week's Stats</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          {[[kc+"/7","📖 Kumon Days","#4d96ff"],[pts+" ⭐","⭐ Total Stars","#ffd93d"],[str+"🔥","🔥 Kumon Streak","#ff6b6b"]].map(([n,l,c])=>(
+            <div key={l} style={{background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.09)",borderRadius:14,padding:14,textAlign:"center"}}>
+              <div style={{fontFamily:"'Baloo 2',sans-serif",fontSize:28,fontWeight:800,color:c}}>{n}</div>
+              <div style={{fontSize:12,color:"#a89bc2",marginTop:2}}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={C.card}>
+        <div style={C.ct("#ff6b6b")}>🗓️ Weekly Planner</div>
+        {DAYS.map((d,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 10px",borderRadius:10,background:"rgba(255,255,255,.04)",border:`1px solid ${i===TODAY_IDX?"rgba(255,217,61,.4)":"rgba(255,255,255,.07)"}`,marginBottom:5}}>
+            <span style={{fontWeight:800,width:34,fontSize:14,color:i===TODAY_IDX?"#ffd93d":"#a89bc2",fontFamily:"'Baloo 2',sans-serif"}}>{d}</span>
+            <span style={{fontSize:18}}>{kd[i]?"📖✅":"📖⬜"}</span>
+            <span style={{fontSize:13,color:"#a89bc2"}}>Kumon {kd[i]?"done":"pending"}</span>
+            {i===TODAY_IDX&&<span style={{marginLeft:"auto",background:"rgba(255,217,61,.18)",border:"1px solid rgba(255,217,61,.4)",borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:700,color:"#ffd93d"}}>TODAY</span>}
+          </div>
+        ))}
+      </div>
+      <div style={C.card}><div style={C.ct("#ff6b6b")}>📝 Weekly Notes</div><Notes id="weekly" /></div>
+      <div style={{background:"linear-gradient(135deg,rgba(255,217,61,.08),rgba(255,107,107,.08))",border:"1px solid rgba(255,217,61,.25)",borderRadius:16,padding:16,marginTop:12}}>
+        <div style={C.ct("#ffd93d")}>📧 Send Daily Report to Parent</div>
+        <p style={{fontSize:13,color:"#a89bc2",marginBottom:10}}>Done for the day, Champion? Send your performance to your parent! 🏏</p>
+        <textarea style={{...C.ta,minHeight:70}} value={msg} onChange={e=>setMsg(e.target.value)} placeholder="Any message for your parent? e.g. I need help with Math, I finished extra reading..." />
+        <button style={{...C.btn("yellow"),width:"100%",marginTop:8,padding:12,fontSize:15}} onClick={send}>🚀 Send Report to Parent</button>
+        {sts&&<div style={{marginTop:8,fontSize:14,fontWeight:700,textAlign:"center",color:"#6bcb77"}} dangerouslySetInnerHTML={{__html:sts}} />}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [tab,setTab] = useState("chores");
+  const [now,setNow] = useState(new Date());
+  const [cd,setCd] = useState({d:0,h:0,m:0,s:0});
+  useEffect(()=>{ const id=setInterval(()=>setNow(new Date()),1000); return()=>clearInterval(id); },[]);
+  useEffect(()=>{
+    const calc=()=>{ const diff=new Date("2026-04-28T09:00:00")-new Date(); if(diff<=0)return setCd({d:0,h:0,m:0,s:0}); setCd({d:Math.floor(diff/86400000),h:Math.floor((diff%86400000)/3600000),m:Math.floor((diff%3600000)/60000),s:Math.floor((diff%60000)/1000)}); };
+    calc(); const id=setInterval(calc,1000); return()=>clearInterval(id);
+  },[]);
+  const TABS=[["chores","🧹 Chores","linear-gradient(135deg,#6bcb77,#45b36a)"],["kumon","📖 Kumon","linear-gradient(135deg,#4d96ff,#2a7aff)"],["school","🏫 School","linear-gradient(135deg,#c77dff,#a24dff)"],["rewards","🏆 Rewards","linear-gradient(135deg,#ffd93d,#ffa500)"],["weekly","📅 Weekly","linear-gradient(135deg,#ff6b6b,#ff4444)"]];
+  return (
+    <div style={C.app}>
+      <div style={C.wrap}>
+        <div style={{padding:"20px 0 0",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
+          <div>
+            <div style={{fontFamily:"'Baloo 2',sans-serif",fontSize:30,fontWeight:800,background:"linear-gradient(135deg,#ffd93d,#ff6b6b,#c77dff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",lineHeight:1.2}}>🏏 King 18</div>
+            <div style={{fontSize:13,color:"#a89bc2",marginTop:2}}>Chase Like Kohli. Win Every Day.</div>
+          </div>
+          <div style={{fontSize:13,color:"#a89bc2",textAlign:"right",lineHeight:1.7}}>
+            {now.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"})}<br/>
+            {now.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}
+          </div>
+        </div>
+        <div style={{background:"rgba(255,107,107,.12)",border:"1px solid rgba(255,107,107,.3)",borderRadius:16,padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8,margin:"12px 0"}}>
+          <div style={{fontWeight:700,fontSize:15,color:"#ff6b6b"}}>📚 Civics Bee Test — April 28, 2026</div>
+          <div style={{display:"flex",gap:8}}>
+            {[["d","Days"],["h","Hrs"],["m","Min"],["s","Sec"]].map(([k,l])=>(
+              <div key={k} style={{background:"rgba(255,107,107,.2)",border:"1px solid rgba(255,107,107,.35)",borderRadius:10,padding:"4px 12px",textAlign:"center",minWidth:54}}>
+                <div style={{fontFamily:"'Baloo 2',sans-serif",fontSize:22,fontWeight:800,color:"#ffd93d",lineHeight:1}}>{k==="d"?cd[k]:pad(cd[k])}</div>
+                <div style={{fontSize:10,color:"#a89bc2",textTransform:"uppercase",letterSpacing:1}}>{l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{background:"rgba(77,150,255,.1)",border:"1px solid rgba(77,150,255,.25)",borderRadius:14,padding:"10px 14px",marginBottom:12}}>
+          <div style={{fontSize:11,color:"#4d96ff",textTransform:"uppercase",letterSpacing:2,fontWeight:700}}>✨ Word of the Day</div>
+          <div><span style={{fontFamily:"'Baloo 2',sans-serif",fontSize:24,fontWeight:800,color:"#ffd93d"}}>{W.w}</span><span style={{fontSize:13,color:"#c77dff",fontStyle:"italic",marginLeft:6}}>{W.p}</span></div>
+          <div style={{fontSize:14,marginTop:3}}>📖 {W.d}</div>
+          <div style={{fontSize:13,color:"#a89bc2",fontStyle:"italic"}}>"{W.e}"</div>
+        </div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",margin:"10px 0"}}>
+          {TABS.map(([id,label,bg])=>(
+            <button key={id} onClick={()=>setTab(id)} style={{fontFamily:"'Nunito',sans-serif",fontWeight:700,fontSize:14,borderRadius:30,padding:"7px 16px",cursor:"pointer",transition:"all .18s",whiteSpace:"nowrap",border:tab===id?"none":"1px solid rgba(255,255,255,.12)",background:tab===id?bg:"rgba(255,255,255,.06)",color:tab===id?(id==="rewards"?"#1a1200":"#fff"):"#a89bc2"}}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <div style={{marginTop:10}}>
+          {tab==="chores"&&<TabChores/>}
+          {tab==="kumon"&&<TabKumon/>}
+          {tab==="school"&&<TabSchool/>}
+          {tab==="rewards"&&<TabRewards/>}
+          {tab==="weekly"&&<TabWeekly/>}
+        </div>
+      </div>
+      <button onClick={()=>setTab("weekly")} style={{position:"fixed",bottom:20,right:20,zIndex:50,background:"linear-gradient(135deg,#ffd93d,#ffa500)",border:"none",borderRadius:50,color:"#1a1200",fontFamily:"'Nunito',sans-serif",fontWeight:800,fontSize:14,padding:"10px 18px",cursor:"pointer",boxShadow:"0 6px 24px rgba(255,217,61,.4)"}}>
+        📧 Send Report
+      </button>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
