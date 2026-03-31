@@ -254,20 +254,37 @@ function TabWeekly() {
   let str=0; for(let i=TODAY_IDX;i>=0;i--){ if(kd[i])str++; else break; }
   const pts = parseInt(localStorage.getItem("pts")||"0");
 
-  const send = async () => {
+  
+    const send = async () => {
     setSts("🤖 Preparing your report...");
     const today = new Date().toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
     const data = `King 18 Daily Report - ${today}\nKumon done this week: ${kc}/7\nKumon streak: ${str} days\nTotal stars: ${pts}\nWeekly notes: ${localStorage.getItem("n_weekly")||"None"}\nMessage from son: ${msg||"(none)"}`;
     try {
-      const r = await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:800,
-          system:"Write a warm friendly plain-text daily report email to a parent from their Grade 7 son's app King 18 - Chase Like Kohli. Celebrate wins. Note pending items. End with a Kohli-style motivational quote. Sign off as King 18 Daily Report.",
-          messages:[{role:"user",content:"Write the parent email:\n\n"+data}]})});
+      const r = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": "YOUR_API_KEY_HERE",
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 800,
+          system: "Write a warm friendly plain-text daily report email to a parent from their Grade 7 son's app King 18 - Chase Like Kohli. Celebrate wins. Note pending items. End with a Kohli-style motivational quote. Sign off as King 18 Daily Report.",
+          messages: [{role: "user", content: "Write the parent email:\n\n" + data}]
+        })
+      });
       const j = await r.json();
-      const body = (j.content&&j.content[0]&&j.content[0].text) ? j.content[0].text : data;
-      const link = "mailto:mindshiftai12@gmail.com?subject="+encodeURIComponent("King 18 Daily Report - "+today)+"&body="+encodeURIComponent(body);
-      setSts('<a href="'+link+'" style="color:#ffd93d;font-weight:800;text-decoration:underline">✅ Click here to open & send the email!</a>');
+      const body = (j.content && j.content[0] && j.content[0].text) ? j.content[0].text : data;
+      const link = "mailto:mindshiftai12@gmail.com?subject=" + encodeURIComponent("King 18 Daily Report - " + today) + "&body=" + encodeURIComponent(body);
+      setSts('<a href="' + link + '" style="color:#ffd93d;font-weight:800;text-decoration:underline">✅ Click here to open & send the email!</a>');
       setMsg("");
+    } catch(e) {
+      const link = "mailto:mindshiftai12@gmail.com?subject=" + encodeURIComponent("King 18 Daily Report - " + today) + "&body=" + encodeURIComponent(data);
+      setSts('<a href="' + link + '" style="color:#ffd93d;font-weight:800;text-decoration:underline">📧 Click here to send report via email</a>');
+    }
+  };
     } catch(e) {
       const link = "mailto:mindshiftai12@gmail.com?subject="+encodeURIComponent("King 18 Daily Report - "+today)+"&body="+encodeURIComponent(data);
       setSts('<a href="'+link+'" style="color:#ffd93d;font-weight:800;text-decoration:underline">📧 Click here to send report via email</a>');
